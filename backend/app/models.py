@@ -1,0 +1,55 @@
+from sqlalchemy import CheckConstraint, Column, DateTime, ForeignKey, Index, Integer, String, Text, UniqueConstraint, text
+from sqlalchemy.orm import declarative_base, relationship
+
+
+Base = declarative_base()
+
+
+class User(Base):
+	__tablename__ = "users"
+
+	id = Column(Integer, primary_key=True, index=True)
+	first_name = Column(String(100), nullable=False)
+	last_name = Column(String(100), nullable=False)
+	email = Column(String(255), nullable=False, unique=True)
+	phone = Column(String(20), unique=True)
+	password_hash = Column(Text, nullable=False)
+	created_at = Column(DateTime, server_default=text("CURRENT_TIMESTAMP"))
+
+	owned_groups = relationship("Group", back_populates="owner", cascade="all, delete-orphan")
+	group_memberships = relationship("GroupMembership", back_populates="user", cascade="all, delete-orphan")
+
+
+class Group(Base):
+	__tablename__ = "groups"
+
+	id = Column(Integer, primary_key=True, index=True)
+	owner_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
+	name = Column(String(255), nullable=False)
+	created_at = Column(DateTime, server_default=text("CURRENT_TIMESTAMP"))
+
+	owner = relationship("User", back_populates="owned_groups")
+	memberships = relationship("GroupMembership", back_populates="group", cascade="all, delete-orphan")
+
+
+class GroupMembership(Base):
+	__tablename__ = "group_memberships"
+	__table_args__ = (
+		CheckConstraint("role IN ('owner', 'member')", name="group_memberships_role_check"),
+		UniqueConstraint("user_id", "group_id", name="unique_membership"),
+		Index(
+			"one_owner_per_group",
+			"group_id",
+			unique=True,
+			postgresql_where=text("role = 'owner'"),
+		),
+	)
+
+	id = Column(Integer, primary_key=True, index=True)
+	user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+	group_id = Column(Integer, ForeignKey("groups.id", ondelete="CASCADE"), nullable=False)
+	role = Column(String(20), nullable=False)
+	joined_at = Column(DateTime, server_default=text("CURRENT_TIMESTAMP"))
+
+	user = relationship("User", back_populates="group_memberships")
+	group = relationship("Group", back_populates="memberships")
