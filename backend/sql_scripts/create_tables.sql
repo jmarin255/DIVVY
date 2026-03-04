@@ -11,7 +11,6 @@ create table if not exists users (
 
 create table if not exists groups (
     id serial primary key,
-    owner_id int,
     name varchar(255) not null,
     created_at timestamp default current_timestamp,
     foreign key (owner_id) references users(id) on delete cascade

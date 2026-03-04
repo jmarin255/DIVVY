@@ -14,11 +14,11 @@ VALUES
     ('Sofia', 'Reed', 'sofia.reed@example.com', '555-1005', '$2b$12$examplehashvalueforsofia000000000000000000000000000'),
     ('Ethan', 'Brooks', 'ethan.brooks@example.com', '555-1006', '$2b$12$examplehashvalueforethan000000000000000000000000000');
 
-INSERT INTO groups (owner_id, name)
+INSERT INTO groups (name)
 VALUES
-    (1, 'Apartment 2B'),
-    (2, 'Summer Road Trip'),
-    (5, 'House Utilities');
+    ('Apartment 2B'),
+    ('Summer Road Trip'),
+    ('House Utilities');
 
 INSERT INTO group_memberships (user_id, group_id, role)
 VALUES
