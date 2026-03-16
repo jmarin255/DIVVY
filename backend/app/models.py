@@ -16,7 +16,6 @@ class User(Base):
 	password_hash = Column(Text, nullable=False)
 	created_at = Column(DateTime, server_default=text("CURRENT_TIMESTAMP"))
 
-	owned_groups = relationship("Group", back_populates="owner", cascade="all, delete-orphan")
 	group_memberships = relationship("GroupMembership", back_populates="user", cascade="all, delete-orphan")
 
 
@@ -24,11 +23,9 @@ class Group(Base):
 	__tablename__ = "groups"
 
 	id = Column(Integer, primary_key=True, index=True)
-	owner_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
 	name = Column(String(255), nullable=False)
 	created_at = Column(DateTime, server_default=text("CURRENT_TIMESTAMP"))
 
-	owner = relationship("User", back_populates="owned_groups")
 	memberships = relationship("GroupMembership", back_populates="group", cascade="all, delete-orphan")
 
 

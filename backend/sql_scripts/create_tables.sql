@@ -13,7 +13,6 @@ create table if not exists groups (
     id serial primary key,
     name varchar(255) not null,
     created_at timestamp default current_timestamp,
-    foreign key (owner_id) references users(id) on delete cascade
 );
 
 CREATE TABLE group_memberships (
