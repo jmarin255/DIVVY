@@ -6,7 +6,9 @@ from app.db.session import get_db
 from app.models import (
     User
 )
-from app.schemas.user import UserRead
+from app.schemas.user import UserRead, UserCreate
+from app.core.security import get_password_hash
+from fastapi import HTTPException
 
 router = APIRouter(
     prefix="/users",
@@ -21,3 +23,29 @@ def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     )
     users = db.execute(statement).scalars().all()
     return users
+
+@router.post("/", response_model=UserRead)
+def create_user(user: UserCreate, db: Session = Depends(get_db)):
+    # Check if email already exists
+    existing_user = db.execute(select(User).where(User.email == user.email)).scalar_one_or_none()
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
+
+    # Check if phone number already exists (if provided)
+    if user.phone:
+        existing_phone = db.execute(select(User).where(User.phone == user.phone)).scalar_one_or_none()
+        if existing_phone:
+            raise HTTPException(status_code=400, detail="Phone number already registered")
+
+    # Create new user
+    new_user = User(
+        first_name=user.first_name,
+        last_name=user.last_name,
+        email=user.email,
+        phone=user.phone,
+        password_hash=get_password_hash(user.password)
+    )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return new_user
