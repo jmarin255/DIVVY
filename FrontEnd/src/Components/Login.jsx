@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import "./login.css";
+import "../login.css";
+import { Link } from "react-router-dom";
 
 const Login = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
@@ -97,7 +98,7 @@ const Login = () => {
 
                 <div className="text-center mt-3">
                   <span className="small text-secondary">
-                    Don’t have an account? <a href="/register">Register</a>
+                    Don’t have an account? <Link to="/register">Register</Link>
                   </span>
                 </div>
               </form>

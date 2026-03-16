@@ -1,6 +1,9 @@
 import './App.css'
 import { useState, useEffect } from "react";
-import Login from "./Login";
+import { Routes, Route } from "react-router-dom";
+
+import Login from "./components/Login";
+import Register from "./components/Register";
 
 function App() {
   const [theme, setTheme] = useState("light");
@@ -10,10 +13,11 @@ function App() {
   }, [theme]);
 
   return (
-    <div>
-      <nav className = "navbar navbar-expand-lg bg-body-tertiary px-4">
-        <div className = "container-fluid">
-          <a className = "navbar-brand" href= "#">DIVVY</a> 
+    <>
+      <nav className="navbar navbar-expand-lg bg-body-tertiary px-4">
+        <div className="container-fluid">
+          <a className="navbar-brand" href="#">DIVVY</a>
+
           <button
             className="btn btn-secondary m-3"
             onClick={() => setTheme(theme === "light" ? "dark" : "light")}
@@ -23,8 +27,11 @@ function App() {
         </div>
       </nav>
 
-      <Login />
-    </div>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+      </Routes>
+    </>
   );
 }
 
