@@ -4,7 +4,9 @@ from sqlalchemy.orm import Session
 
 from app.db.session import get_db
 from app.models import (
-    Group
+    Group,
+    GroupMembership,
+    User
 )
 from app.schemas.group import GroupRead
 from app.schemas.user import UserRead
@@ -44,3 +46,29 @@ def create_group(group: GroupRead, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(new_group)
     return new_group
+
+@router.post("/{group_id}/users/{user_id}")
+def add_user_to_group(group_id: int, user_id: int, db: Session = Depends(get_db)):
+    group = db.execute(select(Group).where(Group.id == group_id)).scalar_one_or_none()
+    if group is None:
+        raise HTTPException(status_code=404, detail="Group not found")
+    
+    user = db.execute(select(User).where(User.id == user_id)).scalar_one_or_none()
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Check if user is already a member of the group
+    existing_membership = db.execute(
+        select(GroupMembership).where(
+            GroupMembership.group_id == group_id,
+            GroupMembership.user_id == user_id
+        )
+    ).scalar_one_or_none()
+    
+    if existing_membership:
+        raise HTTPException(status_code=400, detail="User is already a member of the group")
+    
+    new_membership = GroupMembership(user_id=user_id, group_id=group_id, role="member")
+    db.add(new_membership)
+    db.commit()
+    return {"message": f"User {user.first_name} added to group: {group.name} successfully"}
