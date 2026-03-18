@@ -47,6 +47,15 @@ def create_group(group: GroupRead, db: Session = Depends(get_db)):
     db.refresh(new_group)
     return new_group
 
+@router.delete("/{group_id}")
+def delete_group(group_id: int, db: Session = Depends(get_db)):
+    group = db.execute(select(Group).where(Group.id == group_id)).scalar_one_or_none()
+    if group is None:
+        raise HTTPException(status_code=404, detail="Group not found")
+    db.delete(group)
+    db.commit()
+    return {"message": "Group deleted successfully"}
+
 @router.post("/{group_id}/users/{user_id}")
 def add_user_to_group(group_id: int, user_id: int, db: Session = Depends(get_db)):
     group = db.execute(select(Group).where(Group.id == group_id)).scalar_one_or_none()
@@ -72,3 +81,19 @@ def add_user_to_group(group_id: int, user_id: int, db: Session = Depends(get_db)
     db.add(new_membership)
     db.commit()
     return {"message": f"User {user.first_name} added to group: {group.name} successfully"}
+
+@router.delete("/{group_id}/users/{user_id}")
+def remove_user_from_group(group_id: int, user_id: int, db: Session = Depends(get_db)):
+    membership = db.execute(
+        select(GroupMembership).where(
+            GroupMembership.group_id == group_id,
+            GroupMembership.user_id == user_id
+        )
+    ).scalar_one_or_none()
+    
+    if membership is None:
+        raise HTTPException(status_code=404, detail="Membership not found")
+    
+    db.delete(membership)
+    db.commit()
+    return {"message": f"User removed from group successfully"}
