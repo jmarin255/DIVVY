@@ -1,7 +1,7 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 import secrets
-from typing import Annotated, Any, Literal
-from pydantic import AnyUrl, BeforeValidator
+from typing import Annotated, Any
+from pydantic import AnyUrl, BeforeValidator, computed_field
 
 
 def parse_cors(v: Any) -> list[str] | str:
