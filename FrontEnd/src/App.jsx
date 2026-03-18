@@ -28,6 +28,7 @@ function App() {
       </nav>
 
       <Routes>
+        <Route path="/" element={<Login />} />   {/* 👈 add this */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
       </Routes>
