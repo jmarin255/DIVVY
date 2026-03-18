@@ -95,7 +95,7 @@ pip install -r requirements.txt
 ```
 
 3. Set up environment variables:
-   Create a `.env` file in the backend directory with the following variables:
+   Create a `.env` file in the root directory with the following variables:
 
 ```
 DATABASE_URL=postgresql://user:password@localhost/roommate_expense_splitter

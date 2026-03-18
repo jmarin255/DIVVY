@@ -1,7 +1,15 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 import secrets
+from typing import Annotated, Any, Literal
+from pydantic import AnyUrl, BeforeValidator
 
 
+def parse_cors(v: Any) -> list[str] | str:
+    if isinstance(v, str) and not v.startswith("["):
+        return [i.strip() for i in v.split(",") if i.strip()]
+    elif isinstance(v, list | str):
+        return v
+    raise ValueError(v)
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file="../.env",
@@ -12,8 +20,11 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     SECRET_KEY: str = secrets.token_urlsafe(32) # Ignored if set in .env
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8 # 8 days
-    FRONTEND_HOST: str = "http://localhost:3000"
+    FRONTEND_HOST: str = "http://localhost:5173"
     ENVIRONMENT: str = "local"
+    BACKEND_CORS_ORIGINS: Annotated[
+        list[AnyUrl] | str, BeforeValidator(parse_cors)
+    ] = []
 
     PROJECT_NAME: str
     POSTGRES_SERVER: str
@@ -22,6 +33,7 @@ class Settings(BaseSettings):
     POSTGRES_DB: str
     POSTGRES_PORT: int = 5432
     DATABASE_URL: str
+
 
 settings = Settings() # type: ignore
     
