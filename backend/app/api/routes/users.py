@@ -24,6 +24,13 @@ def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     users = db.execute(statement).scalars().all()
     return users
 
+@router.get("/{user_id}", response_model=UserRead)
+def read_user(user_id: int, db: Session = Depends(get_db)):
+    user = db.execute(select(User).where(User.id == user_id)).scalar_one_or_none()
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+
 @router.post("/", response_model=UserRead)
 def create_user(user: UserCreate, db: Session = Depends(get_db)):
     # Check if email already exists
