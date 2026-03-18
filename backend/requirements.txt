@@ -7,4 +7,5 @@ email-validator
 psycopg2-binary
 pwdlib
 pwdlib[argon2]
+pwdlib[bcrypt]
 jwt
