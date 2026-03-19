@@ -17,6 +17,7 @@ class User(Base):
 	created_at = Column(DateTime, server_default=text("CURRENT_TIMESTAMP"))
 
 	group_memberships = relationship("GroupMembership", back_populates="user", cascade="all, delete-orphan")
+	refresh_sessions = relationship("RefreshSession", back_populates="user", cascade="all, delete-orphan")
 
 
 class Group(Base):
@@ -50,3 +51,16 @@ class GroupMembership(Base):
 
 	user = relationship("User", back_populates="group_memberships")
 	group = relationship("Group", back_populates="memberships")
+
+
+class RefreshSession(Base):
+	__tablename__ = "refresh_sessions"
+
+	id = Column(Integer, primary_key=True, index=True)
+	user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+	token_hash = Column(String(64), nullable=False, unique=True, index=True)
+	expires_at = Column(DateTime, nullable=False, index=True)
+	revoked_at = Column(DateTime, nullable=True)
+	created_at = Column(DateTime, server_default=text("CURRENT_TIMESTAMP"))
+
+	user = relationship("User", back_populates="refresh_sessions")

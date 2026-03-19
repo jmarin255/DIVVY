@@ -8,4 +8,5 @@ psycopg2-binary
 pwdlib
 pwdlib[argon2]
 pwdlib[bcrypt]
-jwt
+PyJWT
+python-multipart

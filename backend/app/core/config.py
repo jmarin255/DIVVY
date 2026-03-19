@@ -1,6 +1,6 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 import secrets
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 from pydantic import AnyUrl, BeforeValidator, computed_field
 
 
@@ -19,7 +19,11 @@ class Settings(BaseSettings):
 
     API_V1_STR: str = "/api/v1"
     SECRET_KEY: str = secrets.token_urlsafe(32) # Ignored if set in .env
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8 # 8 days
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 # 1 hour
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 30
+    REFRESH_TOKEN_COOKIE_NAME: str = "refresh_token"
+    REFRESH_TOKEN_COOKIE_SECURE: bool = False
+    REFRESH_TOKEN_COOKIE_SAMESITE: Literal["lax", "strict", "none"] = "lax"
     FRONTEND_HOST: str = "http://localhost:5173"
     ENVIRONMENT: str = "local"
     BACKEND_CORS_ORIGINS: Annotated[
