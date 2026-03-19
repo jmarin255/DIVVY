@@ -1,9 +1,11 @@
 import { useState } from "react";
 import "../login.css";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 
 const Register = () => {
+    const navigate = useNavigate();
+
     const [formData, setFormData] = useState({
         firstName : "",
         lastName : "",
@@ -39,6 +41,7 @@ const Register = () => {
     
         setError("");
         console.log(formData);
+        navigate("/household");
     };
 
     

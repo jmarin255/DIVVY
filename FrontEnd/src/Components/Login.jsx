@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import "../login.css";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const Login = () => {
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
 
@@ -24,6 +26,8 @@ const Login = () => {
       setError("Please enter a valid email.");
       return;
     }
+
+    navigate("/household");
   };
 
   return (

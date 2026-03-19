@@ -1,11 +1,15 @@
 import './App.css'
 import { useState, useEffect } from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation, Link } from "react-router-dom";
 
 import Login from "./components/Login";
 import Register from "./components/Register";
+import HouseholdChoice from "./components/HouseholdChoice";
+import CreateHousehold from "./components/CreateHousehold";
 
 function App() {
+  const location = useLocation();
+  
   const [theme, setTheme] = useState("light");
 
   useEffect(() => {
@@ -16,8 +20,13 @@ function App() {
     <>
       <nav className="navbar navbar-expand-lg bg-body-tertiary px-4">
         <div className="container-fluid">
-          <a className="navbar-brand" href="#">DIVVY</a>
-
+          {location.pathname === "/create-household" || location.pathname === "/household" ? (
+            <Link className="navbar-brand" to="/household">
+            ← DIVVY
+            </Link>
+          ) : (
+            <a className="navbar-brand" href="#">DIVVY</a>
+          )}
           <button
             className="btn btn-secondary m-3"
             onClick={() => setTheme(theme === "light" ? "dark" : "light")}
@@ -31,6 +40,8 @@ function App() {
         <Route path="/" element={<Login />} />   {/* 👈 add this */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/household" element={<HouseholdChoice />} />
+        <Route path="/create-household" element={<CreateHousehold />} />
       </Routes>
     </>
   );
