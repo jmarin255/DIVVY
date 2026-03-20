@@ -95,7 +95,17 @@ def issue_tokens_for_user(db: Session, response: Response, typed_user: Any) -> T
 
 @router.post("/login", response_model=LoginResponse)
 def login(payload: LoginRequest, response: Response, db: Session = Depends(get_db)):
-    """Authenticate user credentials and issue access + refresh tokens."""
+    """Authenticate user and start a session.
+
+    Validation:
+    - Requires JSON body with `email` and `password`.
+    - Email/password must match a user record.
+
+    Auth input:
+    - No bearer token required.
+    - No token in request body; credentials only.
+    - Sets refresh token as HTTP-only cookie in response.
+    """
     typed_user = authenticate_user(db, payload.email, payload.password)
     token_response = issue_tokens_for_user(db, response, typed_user)
     return LoginResponse(access_token=token_response.access_token, user=typed_user)
@@ -107,14 +117,33 @@ def login_for_access_token(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db),
 ):
-    """OAuth2 password-flow endpoint used by Swagger Authorize."""
+    """OAuth2 password-flow login endpoint used by Swagger Authorize.
+
+    Validation:
+    - Requires form fields `username` (email) and `password`.
+    - Credentials must match a user record.
+
+    Auth input:
+    - No bearer token required.
+    - No token in request body.
+    - Sets refresh token as HTTP-only cookie in response.
+    """
     typed_user = authenticate_user(db, form_data.username, form_data.password)
     return issue_tokens_for_user(db, response, typed_user)
 
 
 @router.post("/refresh", response_model=TokenResponse)
 def refresh_access_token(request: Request, response: Response, db: Session = Depends(get_db)):
-    """Rotate a valid refresh token and return a new access token."""
+    """Rotate refresh token cookie and issue a new access token.
+
+    Validation:
+    - Requires a non-expired, non-revoked refresh session.
+
+    Auth input:
+    - Uses refresh token from HTTP-only cookie.
+    - Does not use bearer token.
+    - Does not require token in request body.
+    """
     refresh_token = request.cookies.get(settings.REFRESH_TOKEN_COOKIE_NAME)
     if not refresh_token:
         raise HTTPException(status_code=401, detail="Refresh token is missing")
@@ -153,7 +182,16 @@ def refresh_access_token(request: Request, response: Response, db: Session = Dep
 
 @router.post("/logout")
 def logout(request: Request, response: Response, db: Session = Depends(get_db)):
-    """Revoke current refresh session and clear refresh cookie."""
+    """End the current refresh session and clear cookie.
+
+    Validation:
+    - Refresh cookie must be present.
+
+    Auth input:
+    - Uses refresh token from HTTP-only cookie.
+    - Does not use bearer token.
+    - Does not require token in request body.
+    """
     refresh_token = request.cookies.get(settings.REFRESH_TOKEN_COOKIE_NAME)
     if refresh_token is None:
         raise HTTPException(status_code=400, detail="Refresh token cookie is missing")

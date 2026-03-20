@@ -25,6 +25,7 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_COOKIE_SECURE: bool = False
     REFRESH_TOKEN_COOKIE_SAMESITE: Literal["lax", "strict", "none"] = "lax"
     FRONTEND_HOST: str = "http://localhost:5173"
+    DEV_EMAILS: Annotated[list[str] | str, BeforeValidator(parse_cors)] = []
     ENVIRONMENT: str = "local"
     BACKEND_CORS_ORIGINS: Annotated[
         list[AnyUrl] | str, BeforeValidator(parse_cors)
@@ -36,6 +37,11 @@ class Settings(BaseSettings):
         return [str(origin).rstrip("/") for origin in self.BACKEND_CORS_ORIGINS] + [
             self.FRONTEND_HOST
         ]
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def dev_emails(self) -> set[str]:
+        return {str(email).strip().lower() for email in self.DEV_EMAILS}
 
     PROJECT_NAME: str
     POSTGRES_SERVER: str

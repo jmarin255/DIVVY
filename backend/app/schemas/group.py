@@ -16,3 +16,8 @@ class GroupRead(GroupBase):
     created_at: datetime | None = None
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class GroupWithMembership(GroupRead):
+    role: str
+    joined_at: datetime | None = None
