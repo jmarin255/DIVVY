@@ -22,7 +22,7 @@ router = APIRouter(
 
 def require_dev(current_user: User = Depends(get_current_user)) -> User:
     current_user_email = str(getattr(current_user, "email", "")).lower()
-    if current_user_email not in settings.dev_emails:
+    if current_user_email not in settings.DEV_EMAILS:
         raise HTTPException(status_code=403, detail="Developer access required")
     return current_user
 
@@ -178,7 +178,7 @@ def delete_user(
     """
     current_user_id = int(getattr(current_user, "id"))
     current_user_email = str(getattr(current_user, "email", "")).lower()
-    is_dev = current_user_email in settings.dev_emails
+    is_dev = current_user_email in settings.DEV_EMAILS
 
     if current_user_id != user_id and not is_dev:
         raise HTTPException(status_code=403, detail="You can only delete your own account unless you are a developer")

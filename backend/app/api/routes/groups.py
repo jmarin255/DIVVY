@@ -21,7 +21,7 @@ router = APIRouter(
 
 def is_dev_user(current_user: User) -> bool:
     current_user_email = str(getattr(current_user, "email", "")).lower()
-    return current_user_email in settings.dev_emails
+    return current_user_email in settings.DEV_EMAILS
 
 
 def require_dev(current_user: User = Depends(get_current_user)) -> User:
