@@ -10,6 +10,7 @@ from app.models import (
 )
 from app.schemas.group import GroupRead
 from app.schemas.user import UserRead
+from app.api.routes.auth import get_current_user
 
 router = APIRouter(
     prefix="/groups",
@@ -48,10 +49,26 @@ def create_group(group: GroupRead, db: Session = Depends(get_db)):
     return new_group
 
 @router.delete("/{group_id}")
-def delete_group(group_id: int, db: Session = Depends(get_db)):
+def delete_group(
+    group_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     group = db.execute(select(Group).where(Group.id == group_id)).scalar_one_or_none()
     if group is None:
         raise HTTPException(status_code=404, detail="Group not found")
+
+    owner_membership = db.execute(
+        select(GroupMembership).where(
+            GroupMembership.group_id == group_id,
+            GroupMembership.user_id == current_user.id,
+            GroupMembership.role == "owner",
+        )
+    ).scalar_one_or_none()
+
+    if owner_membership is None:
+        raise HTTPException(status_code=403, detail="Only the group owner can delete this group")
+
     db.delete(group)
     db.commit()
     return {"message": "Group deleted successfully"}

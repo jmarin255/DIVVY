@@ -9,6 +9,7 @@ from app.models import (
 from app.schemas.user import UserRead, UserCreate
 from app.core.security import get_password_hash
 from fastapi import HTTPException
+from app.api.routes.auth import get_current_user
 
 router = APIRouter(
     prefix="/users",
@@ -23,6 +24,11 @@ def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     )
     users = db.execute(statement).scalars().all()
     return users
+
+
+@router.get("/me", response_model=UserRead)
+def read_my_profile(current_user: User = Depends(get_current_user)):
+    return current_user
 
 @router.get("/{user_id}", response_model=UserRead)
 def read_user(user_id: int, db: Session = Depends(get_db)):
@@ -58,7 +64,15 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
     return new_user
 
 @router.delete("/{user_id}")
-def delete_user(user_id: int, db: Session = Depends(get_db)):
+def delete_user(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    current_user_id = int(getattr(current_user, "id"))
+    if current_user_id != user_id:
+        raise HTTPException(status_code=403, detail="You can only delete your own account")
+
     user = db.execute(select(User).where(User.id == user_id)).scalar_one_or_none()
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")

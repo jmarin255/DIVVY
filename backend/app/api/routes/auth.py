@@ -17,7 +17,6 @@ from app.core.security import (
 from app.db.session import get_db
 from app.models import RefreshSession, User
 from app.schemas.auth import LoginRequest, LoginResponse, TokenResponse
-from app.schemas.user import UserRead
 
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -180,9 +179,3 @@ def get_current_user(
     if user is None:
         raise HTTPException(status_code=401, detail="User not found")
     return user
-
-
-@router.get("/me", response_model=UserRead)
-def read_me(current_user: User = Depends(get_current_user)):
-    """Return the profile of the currently authenticated user."""
-    return current_user
