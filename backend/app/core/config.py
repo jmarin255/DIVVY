@@ -1,7 +1,11 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 import secrets
 from typing import Annotated, Any, Literal
-from pydantic import AnyUrl, BeforeValidator, computed_field
+from pydantic import (
+    AnyUrl, 
+    BeforeValidator, 
+    computed_field, 
+    EmailStr)
 
 
 def parse_cors(v: Any) -> list[str] | str:
@@ -25,6 +29,7 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_COOKIE_SECURE: bool = False
     REFRESH_TOKEN_COOKIE_SAMESITE: Literal["lax", "strict", "none"] = "lax"
     FRONTEND_HOST: str = "http://localhost:5173"
+    ADMIN_EMAILS: Annotated[list[str] | str, BeforeValidator(parse_cors)] = []
     DEV_EMAILS: Annotated[list[str] | str, BeforeValidator(parse_cors)] = []
     ENVIRONMENT: str = "local"
     BACKEND_CORS_ORIGINS: Annotated[
@@ -40,8 +45,10 @@ class Settings(BaseSettings):
 
     @computed_field  # type: ignore[prop-decorator]
     @property
-    def dev_emails(self) -> set[str]:
-        return {str(email).strip().lower() for email in self.DEV_EMAILS}
+    def admin_dev_emails(self) -> set[str]:
+        admin_emails = [str(email).strip().lower() for email in self.ADMIN_EMAILS]
+        dev_emails = [str(email).strip().lower() for email in self.DEV_EMAILS]
+        return set(admin_emails + dev_emails)
 
     PROJECT_NAME: str
     POSTGRES_SERVER: str
@@ -50,6 +57,9 @@ class Settings(BaseSettings):
     POSTGRES_DB: str
     POSTGRES_PORT: int = 5432
     DATABASE_URL: str
+    TEST_DATABASE_URL: str
+    EMAIL_TEST_USER: EmailStr = "test@example.com"
+
 
 
 settings = Settings() # type: ignore

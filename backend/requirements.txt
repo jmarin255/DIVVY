@@ -10,3 +10,5 @@ pwdlib[argon2]
 pwdlib[bcrypt]
 PyJWT
 python-multipart
+pytest
+httpx
