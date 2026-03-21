@@ -37,9 +37,10 @@ function App() {
       </nav>
 
       <Routes>
-        <Route path="/" element={<Login />} />   {/* 👈 add this */}
+        <Route path="/" element={<Login />} />   
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/join" element={<JoinHousehold />} />
         <Route path="/household" element={<HouseholdChoice />} />
         <Route path="/create-household" element={<CreateHousehold />} />
       </Routes>
