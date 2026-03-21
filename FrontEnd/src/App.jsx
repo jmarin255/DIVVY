@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Routes, Route, useLocation, Link } from "react-router-dom";
 
 import Login from "./components/Login";
-import Register from "./components/Register";
+import Register from "./Components/Register";
 import HouseholdChoice from "./components/HouseholdChoice";
 import CreateHousehold from "./components/CreateHousehold";
 import JoinHousehold from "./components/JoinHousehold";
