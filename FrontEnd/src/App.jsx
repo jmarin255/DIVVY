@@ -6,6 +6,7 @@ import Login from "./components/Login";
 import Register from "./components/Register";
 import HouseholdChoice from "./components/HouseholdChoice";
 import CreateHousehold from "./components/CreateHousehold";
+import JoinHousehold from "./components/JoinHousehold";
 
 function App() {
   const location = useLocation();
