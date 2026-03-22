@@ -1,8 +1,16 @@
+import secrets
+import string
+
 from sqlalchemy import CheckConstraint, Column, DateTime, ForeignKey, Index, Integer, String, Text, UniqueConstraint, text
 from sqlalchemy.orm import declarative_base, relationship
 
 
 Base = declarative_base()
+
+
+def generate_join_code(length: int = 5) -> str:
+	alphabet = string.ascii_letters + string.digits
+	return "".join(secrets.choice(alphabet) for _ in range(length))
 
 
 class User(Base):
@@ -25,6 +33,7 @@ class Group(Base):
 
 	id = Column(Integer, primary_key=True, index=True)
 	name = Column(String(255), nullable=False)
+	join_code = Column(String(5), nullable=False, unique=True, default=generate_join_code)
 	created_at = Column(DateTime, server_default=text("CURRENT_TIMESTAMP"))
 
 	memberships = relationship("GroupMembership", back_populates="group", cascade="all, delete-orphan")

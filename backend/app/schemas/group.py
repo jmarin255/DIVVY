@@ -13,6 +13,7 @@ class GroupCreate(GroupBase):
 
 class GroupRead(GroupBase):
     id: int
+    join_code: str
     created_at: datetime | None = None
 
     model_config = ConfigDict(from_attributes=True)

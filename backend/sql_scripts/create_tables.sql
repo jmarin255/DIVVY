@@ -12,6 +12,7 @@ create table if not exists users (
 create table if not exists groups (
     id serial primary key,
     name varchar(255) not null,
+    join_code varchar(5) not null unique,
     created_at timestamp default current_timestamp
 );
 

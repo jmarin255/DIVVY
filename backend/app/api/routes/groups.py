@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -7,7 +8,8 @@ from app.db.session import get_db
 from app.models import (
     Group,
     GroupMembership,
-    User
+    User,
+    generate_join_code,
 )
 from app.schemas.group import GroupCreate, GroupRead
 from app.schemas.user import UserRead
@@ -59,6 +61,16 @@ def ensure_group_member_write_access(
         status_code=403,
         detail="You can only manage yourself unless you are the group owner or a developer",
     )
+
+
+def create_unique_join_code(db: Session) -> str:
+    while True:
+        join_code = generate_join_code()
+        existing_group = db.execute(
+            select(Group).where(Group.join_code == join_code)
+        ).scalar_one_or_none()
+        if existing_group is None:
+            return join_code
 
 
 @router.get("/", response_model=list[GroupRead])
@@ -131,21 +143,72 @@ def create_group(
     - No refresh cookie required.
     - No token in request body.
     """
-    new_group = Group(name=group.name)
-    db.add(new_group)
+    max_attempts = 5
+    for _ in range(max_attempts):
+        new_group = Group(name=group.name, join_code=create_unique_join_code(db))
+        db.add(new_group)
 
-    db.flush()
+        db.flush()
 
-    owner_membership = GroupMembership(
-        user_id=int(getattr(current_user, "id")),
-        group_id=int(getattr(new_group, "id")),
-        role="owner",
+        owner_membership = GroupMembership(
+            user_id=int(getattr(current_user, "id")),
+            group_id=int(getattr(new_group, "id")),
+            role="owner",
+        )
+        db.add(owner_membership)
+
+        try:
+            db.commit()
+            db.refresh(new_group)
+            return new_group
+        except IntegrityError:
+            db.rollback()
+
+    raise HTTPException(status_code=500, detail="Failed to generate a unique join code")
+
+
+@router.post("/join/{join_code}")
+def join_group_by_code(
+    join_code: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Join a group using its join code.
+
+    Validation:
+    - `join_code` must match an existing group.
+    - Authenticated user must not already be in the group.
+
+    Auth input:
+    - Requires bearer access token in `Authorization` header.
+    - No refresh cookie required.
+    - No token in request body.
+    """
+    group = db.execute(
+        select(Group).where(Group.join_code == join_code)
+    ).scalar_one_or_none()
+    if group is None:
+        raise HTTPException(status_code=404, detail="Group not found")
+
+    current_user_id = int(getattr(current_user, "id"))
+    existing_membership = db.execute(
+        select(GroupMembership).where(
+            GroupMembership.group_id == int(getattr(group, "id")),
+            GroupMembership.user_id == current_user_id,
+        )
+    ).scalar_one_or_none()
+    if existing_membership:
+        raise HTTPException(status_code=400, detail="User is already a member of the group")
+
+    new_membership = GroupMembership(
+        user_id=current_user_id,
+        group_id=int(getattr(group, "id")),
+        role="member",
     )
-    db.add(owner_membership)
-
+    db.add(new_membership)
     db.commit()
-    db.refresh(new_group)
-    return new_group
+
+    return {"message": f"Joined group: {group.name} successfully"}
 
 @router.delete("/{group_id}")
 def delete_group(
