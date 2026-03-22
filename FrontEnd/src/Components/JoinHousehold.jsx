@@ -1,23 +1,103 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import "../login.css";
+import { useNavigate } from "react-router-dom";
+import {Html5QrcodeScanner} from "html5-qrcode";
+
 
 const JoinHousehold = () => {
+
+  const navigate = useNavigate();
   const [mode, setMode] = useState("code"); // "code" or "qr"
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
+  const scannerRef = useRef(null);
 
-  const handleJoin = () => {
+  const handleJoin = async (overrideCode = null) => {
     setError("");
-
-    if (mode === "code" && !code) {
-      setError("Please enter a household code");
+  
+    const finalCode = overrideCode || code;
+  
+    if (!finalCode.trim()) {
+      setError("Please enter a join code");
       return;
     }
-
-    console.log("Joining household with:", code);
-
-    // 🔥 Later: call backend here
+  
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:8000/api/v1/groups/join/${finalCode}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("access_token")}`
+          }
+        }
+      );
+  
+      const data = await response.json();
+  
+      if (!response.ok) {
+        setError(data.detail || "Failed to join household.");
+        return;
+      }
+  
+      console.log(data);
+  
+      navigate("/dashboard");
+  
+    } catch (err) {
+      console.error(err);
+      setError("Server error. Try again.");
+    }
   };
+
+
+  useEffect(() => {
+    if (mode !== "qr") return;
+  
+    if (scannerRef.current) return; // prevent duplicates
+  
+    const scanner = new Html5QrcodeScanner(
+      "qr-reader",
+      { fps: 10, qrbox: 250 },
+      false
+    );
+  
+    scannerRef.current = scanner;
+  
+    scanner.render(
+      (decodedText) => {
+        console.log("QR Result:", decodedText);
+  
+        let scannedCode = "";
+  
+        try {
+          const url = new URL(decodedText);
+          scannedCode = url.searchParams.get("code");
+        } catch {
+          scannedCode = decodedText;
+        }
+  
+        if (scannedCode) {
+          setCode(scannedCode);
+          handleJoin(scannedCode);
+          scanner.clear();
+          scannerRef.current = null;
+        }
+      },
+      () => {}
+    );
+  
+    return () => {
+      if (scannerRef.current) {
+        scannerRef.current.clear().catch(() => {});
+        scannerRef.current = null;
+      }
+    };
+  }, [mode]);
+
+
+
 
   return (
     <div className="login-page py-5">
@@ -77,20 +157,9 @@ const JoinHousehold = () => {
             {/* QR MODE */}
             {mode === "qr" && (
               <div className="text-center mb-3">
-                <div
-                  style={{
-                    width: "150px",
-                    height: "150px",
-                    margin: "0 auto",
-                    backgroundColor: "#eee",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    borderRadius: "10px",
-                  }}
-                >
-                  QR Code
-                </div>
+
+                <div id="qr-reader" style={{ width: "100%" }} />
+
                 <small className="text-muted d-block mt-2">
                   Scan QR code to join
                 </small>
@@ -98,12 +167,14 @@ const JoinHousehold = () => {
             )}
 
             {/* Join button */}
-            <button
-              className="btn btn-dark w-100 mt-3"
-              onClick={handleJoin}
-            >
-              Join Household
-            </button>
+            {mode === "code" && (
+              <button
+                className="btn btn-dark w-100 mt-3"
+                onClick={() => handleJoin()}
+              >
+                Join Household
+              </button>
+            )}
           </div>
 
           {/* Footer */}

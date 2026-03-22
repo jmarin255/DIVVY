@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState} from "react";
 import "../login.css";
 import { Link, useNavigate } from "react-router-dom";
 
-const Login = () => {
+const Login = ({setUser}) => {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({ email: "", password: "" });
@@ -16,25 +16,59 @@ const Login = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-
-    console.log("Submitting:", formData);
-
+  
     if (!formData.email.includes("@")) {
-      setError("Please enter a valid email.");
+      setError("Enter a valid email");
       return;
     }
-
-    navigate("/household");
+  
+    try {
+      const response = await fetch(
+        "http://127.0.0.1:8000/api/v1/auth/login",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include", //IMPORTANT (for cookies)
+          body: JSON.stringify({
+            email: formData.email,
+            password: formData.password,
+          }),
+        }
+      );
+  
+      const data = await response.json();
+  
+      if (!response.ok) {
+        setError(data.detail || "Login failed");
+        return;
+      }
+  
+      console.log("Logged in:", data);
+  
+      //  Store access token
+      localStorage.setItem("access_token", data.access_token);
+  
+      // store user
+      localStorage.setItem("user", JSON.stringify(data.user));
+      
+      setUser(data.user);
+  
+      // Redirect after login
+      navigate("/");
+  
+    } catch (err) {
+      console.error(err);
+      setError("Server error. Try again.");
+    }
   };
 
   return (
     <>
-      {/* NAVBAR */}
-    
-
       {/* LOGIN PAGE */}
       <div className="login-page py-5">
 
