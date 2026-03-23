@@ -3,7 +3,7 @@
 
 BEGIN;
 
-TRUNCATE TABLE group_memberships, groups, users RESTART IDENTITY CASCADE;
+TRUNCATE TABLE refresh_sessions, group_memberships, groups, users RESTART IDENTITY CASCADE;
 
 INSERT INTO users (first_name, last_name, email, phone, password_hash)
 VALUES
@@ -14,11 +14,11 @@ VALUES
     ('Sofia', 'Reed', 'sofia.reed@example.com', '385-555-1005', '$2b$12$examplehashvalueforsofia000000000000000000000000000'),
     ('Ethan', 'Brooks', 'ethan.brooks@example.com', '385-555-1006', '$2b$12$examplehashvalueforethan000000000000000000000000000');
 
-INSERT INTO groups (name)
+INSERT INTO groups (name, join_code)
 VALUES
-    ('Apartment 2B'),
-    ('Summer Road Trip'),
-    ('House Utilities');
+    ('Apartment 2B', 'APT2B'),
+    ('Summer Road Trip', 'TR1P9'),
+    ('House Utilities', 'UTIL5');
 
 INSERT INTO group_memberships (user_id, group_id, role)
 VALUES
