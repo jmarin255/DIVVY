@@ -26,7 +26,48 @@ Roommate-Expense-Splitter/
 
 - Python 3.10+
 - Node.js 18+ and npm
-- PostgreSQL 12+
+- PostgreSQL 12+ server if you host DB locally
+- PostgreSQL client (`psql`) only if you need to run SQL scripts manually (optional for remote pre-initialized DBs)
+
+## 0. Install Prerequisites
+
+Install Python, Node.js, npm, and PostgreSQL using your OS package manager.
+
+If you use a remote database that is already initialized, you can skip installing PostgreSQL locally and skip `psql`.
+
+Ubuntu/Debian:
+
+```bash
+sudo apt update
+sudo apt install -y python3 python3-venv python3-pip nodejs npm postgresql postgresql-contrib
+```
+
+macOS (Homebrew):
+
+```bash
+brew update
+brew install python node postgresql@16
+brew services start postgresql@16
+```
+
+Windows (winget, PowerShell):
+
+```powershell
+winget install Python.Python.3.12
+winget install OpenJS.NodeJS.LTS.17
+winget install PostgreSQL.PostgreSQL
+```
+
+After installation, verify versions:
+
+```bash
+python3 --version
+node --version
+npm --version
+psql --version
+```
+
+If `psql` is not installed, that is fine when using a remote DB that is already initialized.
 
 ## 1. Install Backend Dependencies
 
@@ -71,6 +112,8 @@ Note: backend settings load from `../.env`, so keep `.env` at the repository roo
 
 Only do this step if your PostgreSQL database is uninitialized (fresh setup).
 
+If you are using a remote DB that is already initialized, skip this section.
+
 Create the database and run schema scripts:
 
 Example:
@@ -102,6 +145,14 @@ If the script is not executable:
 
 ```bash
 bash scripts/run-dev.sh
+```
+
+Or on Windows (PowerShell):
+
+```powershell
+cd backend
+.\.venv\Scripts\Activate.ps1
+.\scripts\run-dev.ps1
 ```
 
 Terminal 2 (frontend):
