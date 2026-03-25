@@ -20,7 +20,7 @@ const CreateHousehold = () => {
     
         try {
             const response = await fetch(
-                "http://127.0.0.1:8000/api/v1/groups/",
+                "http://127.0.0.1:8000/api/v1/me/groups/",
                 {
                     method: "POST",
                     headers: {
