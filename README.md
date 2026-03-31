@@ -1,8 +1,8 @@
-# Roommate Expense Splitter
+# Divvy
 
 Software Engineering II project.
 
-Roommate Expense Splitter is a full-stack web application for managing shared household expenses, roommate groups, and authentication.
+Divvy is a full-stack web application for managing shared household expenses, roommate groups, and authentication.
 
 ## Tech Stack
 

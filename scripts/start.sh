@@ -1,9 +1,12 @@
 #!/bin/bash
 
-# Smart startup script for Roommate Expense Splitter
+# Smart startup script for Divvy
 # Automatically detects if local PostgreSQL is needed
 
-echo "🚀 Starting Roommate Expense Splitter..."
+# Change to the project root directory
+cd "$(dirname "$0")/.." || exit 1
+
+echo "🚀 Starting Divvy..."
 
 # Check if .env file exists
 if [ ! -f .env ]; then

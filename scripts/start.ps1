@@ -1,7 +1,10 @@
-# Smart startup script for Roommate Expense Splitter (Windows PowerShell)
+# Smart startup script for Divvy (Windows PowerShell)
 # Automatically detects if local PostgreSQL is needed
 
-Write-Host "🚀 Starting Roommate Expense Splitter..." -ForegroundColor Cyan
+# Change to the project root directory
+Set-Location -Path (Join-Path $PSScriptRoot "..")
+
+Write-Host "🚀 Starting Divvy..." -ForegroundColor Cyan
 
 # Check if .env file exists
 if (-not (Test-Path .env)) {

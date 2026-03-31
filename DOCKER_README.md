@@ -1,6 +1,6 @@
 # Docker Setup Guide
 
-This guide explains how to run the Roommate Expense Splitter application using Docker.
+This guide explains how to run the Divvy application using Docker.
 
 ## Prerequisites
 
@@ -213,7 +213,7 @@ Environment variables are loaded from your `.env` file:
 
 ### For Neon Database (Remote):
 ```env
-PROJECT_NAME=Roommate Expense Splitter
+PROJECT_NAME=Divvy
 API_V1_STR=/api/v1
 SECRET_KEY=your-secure-secret-key
 DATABASE_URL=postgresql://user:password@ep-xxxxx.us-east-2.aws.neon.tech/database
@@ -223,7 +223,7 @@ FRONTEND_HOST=http://localhost:5173
 
 ### For Local Database:
 ```env
-PROJECT_NAME=Roommate Expense Splitter
+PROJECT_NAME=Divvy
 API_V1_STR=/api/v1
 SECRET_KEY=your-secure-secret-key
 # Leave DATABASE_URL commented out or empty - it will default to the local container
