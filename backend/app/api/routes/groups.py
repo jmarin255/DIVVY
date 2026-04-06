@@ -1,9 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session
-
-from app.core.config import settings
+from app.core.security import (
+    get_current_user,
+    is_dev_user,
+    require_dev,
+)
 from app.db.session import get_db
 from app.models import (
     Group,
@@ -13,23 +12,12 @@ from app.models import (
 )
 from app.schemas.group import GroupCreate, GroupRead
 from app.schemas.user import UserRead
-from app.api.routes.auth import get_current_user
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
 
-router = APIRouter(
-    prefix="/groups",
-    tags=["groups"]
-)
-
-
-def is_dev_user(current_user: User) -> bool:
-    current_user_email = str(getattr(current_user, "email", "")).lower()
-    return current_user_email in settings.DEV_EMAILS
-
-
-def require_dev(current_user: User = Depends(get_current_user)) -> User:
-    if not is_dev_user(current_user):
-        raise HTTPException(status_code=403, detail="Developer access required")
-    return current_user
+router = APIRouter(prefix="/groups", tags=["groups"])
 
 
 def is_group_owner(db: Session, group_id: int, current_user_id: int) -> bool:
@@ -97,12 +85,14 @@ def read_groups(
     groups = db.execute(statement).scalars().all()
     return groups
 
+
 @router.get("/{group_id}", response_model=GroupRead)
 def read_group(group_id: int, db: Session = Depends(get_db)):
     group = db.execute(select(Group).where(Group.id == group_id)).scalar_one_or_none()
     if group is None:
         raise HTTPException(status_code=404, detail="Group not found")
     return group
+
 
 @router.get("/{group_id}/users", response_model=list[UserRead])
 def read_group_users(
@@ -125,6 +115,7 @@ def read_group_users(
     if group is None:
         raise HTTPException(status_code=404, detail="Group not found")
     return [membership.user for membership in group.memberships]
+
 
 @router.post("/", response_model=GroupRead)
 def create_group(
@@ -198,7 +189,9 @@ def join_group_by_code(
         )
     ).scalar_one_or_none()
     if existing_membership:
-        raise HTTPException(status_code=400, detail="User is already a member of the group")
+        raise HTTPException(
+            status_code=400, detail="User is already a member of the group"
+        )
 
     new_membership = GroupMembership(
         user_id=current_user_id,
@@ -209,6 +202,7 @@ def join_group_by_code(
     db.commit()
 
     return {"message": f"Joined group: {group.name} successfully"}
+
 
 @router.delete("/{group_id}")
 def delete_group(
@@ -232,12 +226,18 @@ def delete_group(
         raise HTTPException(status_code=404, detail="Group not found")
 
     current_user_id = int(getattr(current_user, "id"))
-    if not is_dev_user(current_user) and not is_group_owner(db, group_id, current_user_id):
-        raise HTTPException(status_code=403, detail="Only the group owner or a developer can delete this group")
+    if not is_dev_user(current_user) and not is_group_owner(
+        db, group_id, current_user_id
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="Only the group owner or a developer can delete this group",
+        )
 
     db.delete(group)
     db.commit()
     return {"message": "Group deleted successfully"}
+
 
 @router.post("/{group_id}/users/{user_id}")
 def add_user_to_group(
@@ -263,26 +263,30 @@ def add_user_to_group(
         raise HTTPException(status_code=404, detail="Group not found")
 
     ensure_group_member_write_access(db, group_id, user_id, current_user)
-    
+
     user = db.execute(select(User).where(User.id == user_id)).scalar_one_or_none()
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
-    
+
     # Check if user is already a member of the group
     existing_membership = db.execute(
         select(GroupMembership).where(
-            GroupMembership.group_id == group_id,
-            GroupMembership.user_id == user_id
+            GroupMembership.group_id == group_id, GroupMembership.user_id == user_id
         )
     ).scalar_one_or_none()
-    
+
     if existing_membership:
-        raise HTTPException(status_code=400, detail="User is already a member of the group")
-    
+        raise HTTPException(
+            status_code=400, detail="User is already a member of the group"
+        )
+
     new_membership = GroupMembership(user_id=user_id, group_id=group_id, role="member")
     db.add(new_membership)
     db.commit()
-    return {"message": f"User {user.first_name} added to group: {group.name} successfully"}
+    return {
+        "message": f"User {user.first_name} added to group: {group.name} successfully"
+    }
+
 
 @router.delete("/{group_id}/users/{user_id}")
 def remove_user_from_group(
@@ -311,14 +315,14 @@ def remove_user_from_group(
 
     membership = db.execute(
         select(GroupMembership).where(
-            GroupMembership.group_id == group_id,
-            GroupMembership.user_id == user_id
+            GroupMembership.group_id == group_id, GroupMembership.user_id == user_id
         )
     ).scalar_one_or_none()
-    
+
     if membership is None:
         raise HTTPException(status_code=404, detail="Membership not found")
-    
+
     db.delete(membership)
     db.commit()
-    return {"message": f"User removed from group successfully"}
+    return {"message": "User removed from group successfully"}
+

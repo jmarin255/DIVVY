@@ -1,26 +1,22 @@
 from datetime import datetime, timedelta
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from sqlalchemy import select
-from sqlalchemy.orm import Session
-
 from app.core.config import settings
 from app.core.security import (
     create_access_token,
     create_refresh_token,
-    decode_access_token,
     hash_refresh_token,
     verify_password,
 )
 from app.db.session import get_db
 from app.models import RefreshSession, User
 from app.schemas.auth import LoginRequest, LoginResponse, TokenResponse
-
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/auth", tags=["auth"])
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/token")
 
 
 def set_refresh_cookie(response: Response, refresh_token: str) -> None:
@@ -74,7 +70,9 @@ def authenticate_user(db: Session, email: str, password: str) -> Any:
     return typed_user
 
 
-def issue_tokens_for_user(db: Session, response: Response, typed_user: Any) -> TokenResponse:
+def issue_tokens_for_user(
+    db: Session, response: Response, typed_user: Any
+) -> TokenResponse:
     """Create access/refresh tokens, persist refresh session, and set cookie."""
     user_id = int(getattr(typed_user, "id"))
 
@@ -133,7 +131,9 @@ def login_for_access_token(
 
 
 @router.post("/refresh", response_model=TokenResponse)
-def refresh_access_token(request: Request, response: Response, db: Session = Depends(get_db)):
+def refresh_access_token(
+    request: Request, response: Response, db: Session = Depends(get_db)
+):
     """Rotate refresh token cookie and issue a new access token.
 
     Validation:
@@ -200,20 +200,3 @@ def logout(request: Request, response: Response, db: Session = Depends(get_db)):
 
     response.delete_cookie(key=settings.REFRESH_TOKEN_COOKIE_NAME, path="/")
     return {"message": "Logged out successfully"}
-
-
-def get_current_user(
-    token: str = Depends(oauth2_scheme),
-    db: Session = Depends(get_db),
-) -> User:
-    """Resolve and return the currently authenticated user from bearer token."""
-    try:
-        payload = decode_access_token(token)
-        user_id = int(payload["sub"])
-    except (ValueError, TypeError):
-        raise HTTPException(status_code=401, detail="Invalid authentication credentials")
-
-    user = db.execute(select(User).where(User.id == user_id)).scalar_one_or_none()
-    if user is None:
-        raise HTTPException(status_code=401, detail="User not found")
-    return user

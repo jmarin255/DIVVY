@@ -1,7 +1,4 @@
-from fastapi import APIRouter, Depends
-from sqlalchemy import select
-from sqlalchemy.orm import Session
-
+from app.core.security import get_current_user
 from app.db.session import get_db
 from app.models import (
     GroupMembership,
@@ -9,12 +6,11 @@ from app.models import (
 )
 from app.schemas.group import GroupWithMembership
 from app.schemas.user import UserRead
-from app.api.routes.auth import get_current_user
+from fastapi import APIRouter, Depends
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 
-router = APIRouter(
-    prefix="/me",
-    tags=["me"]
-)
+router = APIRouter(prefix="/me", tags=["me"])
 
 
 @router.get("/", response_model=UserRead)
@@ -47,11 +43,15 @@ def read_my_groups(
     - No refresh cookie required.
     - No token in request body.
     """
-    memberships = db.execute(
-        select(GroupMembership).where(
-            GroupMembership.user_id == int(getattr(current_user, "id"))
+    memberships = (
+        db.execute(
+            select(GroupMembership).where(
+                GroupMembership.user_id == int(getattr(current_user, "id"))
+            )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
 
     return [
         GroupWithMembership(
@@ -64,3 +64,4 @@ def read_my_groups(
         )
         for membership in memberships
     ]
+
