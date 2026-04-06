@@ -31,6 +31,16 @@ def is_group_owner(db: Session, group_id: int, current_user_id: int) -> bool:
     return owner_membership is not None
 
 
+def is_group_member(db: Session, group_id: int, user_id: int) -> bool:
+    membership = db.execute(
+        select(GroupMembership).where(
+            GroupMembership.group_id == group_id,
+            GroupMembership.user_id == user_id,
+        )
+    ).scalar_one_or_none()
+    return membership is not None
+
+
 def ensure_group_member_write_access(
     db: Session,
     group_id: int,
@@ -98,13 +108,13 @@ def read_group(group_id: int, db: Session = Depends(get_db)):
 def read_group_users(
     group_id: int,
     db: Session = Depends(get_db),
-    _: User = Depends(require_dev),
+    current_user: User = Depends(get_current_user),
 ):
-    """List users in a group for developer accounts only.
+    """List users in a group for members and developers.
 
     Validation:
     - `group_id` must exist or returns 404.
-    - Caller must be a developer email from `DEV_EMAILS`.
+    - Caller must be a member of `group_id` or a developer.
 
     Auth input:
     - Requires bearer access token in `Authorization` header.
@@ -114,6 +124,16 @@ def read_group_users(
     group = db.execute(select(Group).where(Group.id == group_id)).scalar_one_or_none()
     if group is None:
         raise HTTPException(status_code=404, detail="Group not found")
+
+    current_user_id = int(getattr(current_user, "id"))
+    if not is_dev_user(current_user) and not is_group_member(
+        db, group_id, current_user_id
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="Only group members or developers can view group users",
+        )
+
     return [membership.user for membership in group.memberships]
 
 

@@ -36,3 +36,14 @@ class ExpenseSplitRead(ExpenseSplit):
 
 class ExpenseReadWithSplits(ExpenseRead):
     splits: list[ExpenseSplitRead] = []
+
+
+class ExpenseOwedRead(BaseModel):
+    expense_id: int
+    split_id: int
+    group_id: int
+    created_by: int
+    total_amount: float
+    amount_owed: float
+    description: str | None = None
+    created_at: datetime | None = None
