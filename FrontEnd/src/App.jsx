@@ -10,6 +10,7 @@ import JoinHousehold from "./Components/JoinHousehold";
 import AuthRedirect from "./Components/AuthRedirect";
 import HouseholdDashboard from "./Components/HouseholdDashboard";
 import ProtectedRoute from "./Components/ProtectedRoute";
+import HouseholdDetail from "./components/HouseholdDetail";
 
 function App() {
   const location = useLocation();
@@ -220,6 +221,15 @@ function App() {
           element={
             <ProtectedRoute user={user}>
               <JoinHousehold />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/household/:groupId"
+          element={
+            <ProtectedRoute user={user}>
+              <HouseholdDetail />
             </ProtectedRoute>
           }
         />
