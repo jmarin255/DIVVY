@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { QRCodeCanvas } from "qrcode.react";
+import { useNavigate } from "react-router-dom";
 
 const HouseholdDetail = () => {
   const { groupId } = useParams();
+  const navigate = useNavigate(); // expenses page navigation
 
   const [group, setGroup] = useState(null);
   const [members, setMembers] = useState([]);
@@ -105,7 +107,9 @@ const HouseholdDetail = () => {
           <div className="card p-3 shadow-sm">
             <div className="d-flex justify-content-between align-items-center mb-3">
               <h5 className="mb-0">Expenses</h5>
-              <button className="btn btn-dark btn-sm">See More</button>
+              <button className="btn btn-dark btn-sm" onClick={() => navigate(`/household/${groupId}/expenses`)}>
+                See More
+  </button>
             </div>
 
             {expenses.length === 0 ? (

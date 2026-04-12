@@ -11,6 +11,8 @@ import AuthRedirect from "./Components/AuthRedirect";
 import HouseholdDashboard from "./Components/HouseholdDashboard";
 import ProtectedRoute from "./Components/ProtectedRoute";
 import HouseholdDetail from "./components/HouseholdDetail";
+import Expenses from "./Components/Expenses";
+import AddExpense from "./Components/AddExpense";
 
 function App() {
   const location = useLocation();
@@ -86,10 +88,10 @@ function App() {
   const backPath = hasGroups ? "/dashboard" : "/household";
 
   const showBackButton =
-  location.pathname === "/create-household" ||
-  location.pathname === "/join-household" ||
-  location.pathname === "/household" ||
-  location.pathname.startsWith("/household/");
+    location.pathname === "/create-household" ||
+    location.pathname === "/join-household" ||
+    location.pathname === "/household" ||
+    location.pathname.startsWith("/household/");
 
   // Prevent flicker / bad redirects
   if (loadingUser) {
@@ -233,7 +235,26 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        <Route
+          path="/household/:groupId/expenses"
+          element={
+            <ProtectedRoute user={user}>
+              <Expenses />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/household/:groupId/add-expense"
+          element={
+            <ProtectedRoute user={user}>
+              <AddExpense />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
+
     </>
   );
 }
