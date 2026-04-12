@@ -77,18 +77,31 @@ const HouseholdDashboard = () => {
                 style={{ cursor: "pointer" }}
                 onClick={() => handleOpenGroup(group)}
               >
-                <h5 className="fw-bold">{group.name}</h5>
+                <h5 className="text-center fw-bold">{group.name}</h5>
 
                 <p className="text-muted small mb-1">
                   Code: {group.join_code}
                 </p>
+               
 
-                <small className="text-muted">
-                  Created:{" "}
-                  {new Date(group.created_at).toLocaleDateString()}
-                </small>
+
+               
+                <div className="card p-3 shadow-sm h-40">
+                  <h6 className = "fw-bold" > Expense Name</h6>
+                  <h7 className="text-muted small mb-1">Date</h7>
+                </div>
+                <div className="text-center mt-2">
+                  <button
+                    className="btn btn-dark btn-sm w-auto mt-2"
+                    onClick={() => navigate(`/household/${group.id}`)}
+                  >
+                    Open
+                  </button>
+                </div>
+
               </div>
             </div>
+
           ))}
         </div>
       )}

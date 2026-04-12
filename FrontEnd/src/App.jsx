@@ -85,11 +85,11 @@ function App() {
   // Back button logic
   const backPath = hasGroups ? "/dashboard" : "/household";
 
-  const showBackButton = [
-    "/create-household",
-    "/join-household",
-    "/household",
-  ].includes(location.pathname);
+  const showBackButton =
+  location.pathname === "/create-household" ||
+  location.pathname === "/join-household" ||
+  location.pathname === "/household" ||
+  location.pathname.startsWith("/household/");
 
   // Prevent flicker / bad redirects
   if (loadingUser) {
