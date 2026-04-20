@@ -1,97 +1,168 @@
-// Expenses.jsx
+import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useParams } from "react-router-dom";
+const API_BASE = "http://127.0.0.1:8000/api/v1";
 
 const Expenses = () => {
-  const navigate = useNavigate();
   const { groupId } = useParams();
+  const navigate = useNavigate();
 
-  // TEMP DATA (replace with backend later)
-  const [expenses] = useState([
-    { name: "Groceries", amount: 20, category: "Food", date: "Today" },
-    { name: "Internet", amount: 50, category: "Bills", date: "Yesterday" },
-  ]);
+  const [expenses, setExpenses] = useState([]);
+  const [balances, setBalances] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const token = localStorage.getItem("access_token");
+
+      const [expRes, owedRes] = await Promise.all([
+        fetch(`${API_BASE}/expenses/group/${groupId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch(`${API_BASE}/me/owed-expenses`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+      ]);
+
+      const expData = await expRes.json();
+      const owedData = await owedRes.json();
+
+      if (expRes.ok) setExpenses(expData);
+      if (owedRes.ok) setBalances(owedData);
+    };
+
+    fetchData();
+  }, [groupId]);
+
+  // totals
+  const youAreOwed = balances.reduce(
+    (sum, b) => sum + (b.amount_owed_to_you || 0),
+    0
+  );
+
+  const youOwe = balances.reduce(
+    (sum, b) => sum + (b.amount_you_owe || 0),
+    0
+  );
 
   return (
     <div className="container py-4">
 
-      {/* Header */}
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2 className="fw-bold mb-0">Expenses</h2>
-
-        <button
-          className="btn btn-outline-secondary"
-          onClick={() => navigate(`/household/${groupId}`)}
-        >
-          ← Back
-        </button>
-      </div>
+      <h2 className="text-center fw-bold mb-4">Expenses</h2>
 
       {/* Summary */}
-      <div className="d-flex gap-3 mb-4">
-        <div className="card p-3 shadow-sm text-center flex-fill">
-          <small className="text-muted">You're Owed</small>
-          <h5 className="fw-bold">$45.50</h5>
-        </div>
+      <div className="card p-4 mb-4 text-center">
+        <div className="d-flex justify-content-center gap-5">
+          <div>
+            <small className="text-muted d-block">You're owed</small>
+            <span className="fw-bold text-success">
+              ${youAreOwed.toFixed(2)}
+            </span>
+          </div>
 
-        <div className="card p-3 shadow-sm text-center flex-fill">
-          <small className="text-muted">You Owe</small>
-          <h5 className="fw-bold">$0.00</h5>
+          <div>
+            <small className="text-muted d-block">You owe</small>
+            <span className="fw-bold text-danger">
+              ${youOwe.toFixed(2)}
+            </span>
+          </div>
         </div>
       </div>
 
       {/* Expenses List */}
-      <div className="card p-3 shadow-sm mb-4">
+      <div className="card p-3">
         <div className="d-flex justify-content-between align-items-center mb-3">
-          <h6 className="fw-bold mb-0">Recent Expenses</h6>
+          <h6 className="mb-0 fw-bold">Recent Expenses</h6>
 
           <button
-            className="btn btn-sm btn-outline-secondary"
-            onClick={() => navigate(`/household/${groupId}/add-expense`)}
+            className="btn btn-dark btn-sm"
+            onClick={() =>
+              navigate(`/household/${groupId}/add-expense`)
+            }
           >
             +
           </button>
         </div>
 
         {expenses.length === 0 ? (
-          <p className="text-muted text-center">No expenses yet</p>
+          <div className="text-muted text-center py-3">
+            No expenses yet
+          </div>
         ) : (
-          expenses.map((exp, index) => (
-            <div
-              key={index}
-              className="card p-2 mb-2 shadow-sm"
-            >
-              <div className="d-flex justify-content-between">
-                <div>
-                  <strong>{exp.name}</strong>
-                  <div className="small text-muted">{exp.date}</div>
-                </div>
+          expenses.slice(0, 5).map((expense) => {
+            const balance = balances.find(
+              (b) =>
+                b.expense_id === expense.id ||
+                b.expenseId === expense.id
+            );
 
-                <div className="text-end">
-                  <div>${exp.amount}</div>
-                  <span className="badge bg-secondary">
-                    {exp.category}
-                  </span>
+            const userOwes = balance?.amount_you_owe || 0;
+            const userIsOwed = balance?.amount_owed_to_you || 0;
+
+            const displayAmount = userOwes + userIsOwed;
+
+            return (
+              <div
+                key={expense.id}
+                className="border rounded p-3 mb-3"
+              >
+                <div className="d-flex justify-content-between align-items-start">
+
+                  {/* LEFT */}
+                  <div>
+                    <div className="fw-bold">
+                      {expense.name || expense.description || "Unnamed Expense"}
+                    </div>
+
+                    {expense.description && (
+                      <div className="text-muted small">
+                        {expense.description}
+                      </div>
+                    )}
+
+                    <small className="text-muted">
+                      {expense.created_at
+                        ? new Date(expense.created_at).toLocaleDateString()
+                        : ""}
+                    </small>
+                  </div>
+
+                  {/* RIGHT */}
+                  <div className="text-end">
+                    <div className="fw-semibold">
+                      ${Number(displayAmount).toFixed(2)}
+                    </div>
+
+                    <div className="d-flex gap-2 mt-2 justify-content-end">
+
+                      <button
+                        className="btn btn-sm btn-outline-dark"
+                        onClick={() => {
+                          console.log("Settle up clicked for expense:", expense.id);
+                        }}
+                      >
+                        Settle Up
+                      </button>
+
+                      <button
+                        className="btn btn-sm btn-dark"
+                        onClick={() =>
+                          navigate(
+                            `/household/${groupId}/add-expense`,
+                            { state: { expense } }
+                          )
+                        }
+                      >
+                        Edit
+                      </button>
+
+                    </div>
+                  </div>
+
                 </div>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
-      </div>
-
-      {/* Actions */}
-      <div className="d-flex gap-3 justify-content-center">
-        <button className="btn btn-outline-dark">
-          Settle Up
-        </button>
-
-        <button
-          className="btn btn-dark"
-          onClick={() => navigate(`/household/${groupId}/add-expense`)}>
-          Add Expense
-        </button>
       </div>
 
     </div>
