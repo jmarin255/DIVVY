@@ -135,6 +135,7 @@ def read_my_owed_expenses(
             expense_id=int(getattr(expense, "id")),
             split_id=int(getattr(split, "id")),
             group_id=int(getattr(expense, "group_id")),
+            name=str(getattr(expense, "name")),
             created_by=int(getattr(expense, "created_by")),
             total_amount=float(getattr(expense, "total_amount")),
             amount_owed=float(getattr(split, "amount")),

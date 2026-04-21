@@ -4,6 +4,7 @@ from pydantic import BaseModel, ConfigDict
 
 
 class ExpenseBase(BaseModel):
+    name: str
     amount: float
     description: str | None = None
 
@@ -42,6 +43,7 @@ class ExpenseOwedRead(BaseModel):
     expense_id: int
     split_id: int
     group_id: int
+    name: str
     created_by: int
     total_amount: float
     amount_owed: float

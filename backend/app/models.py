@@ -129,6 +129,7 @@ class Expense(Base):
     created_by = Column(
         Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
+    name = Column(String(255), nullable=False)
     total_amount = Column(Numeric(10, 2), nullable=False)
     description = Column(Text, nullable=True)
     created_at = Column(DateTime, server_default=text("CURRENT_TIMESTAMP"))

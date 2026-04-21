@@ -74,6 +74,7 @@ create table if not exists expenses (
     id serial primary key,
     group_id integer not null,
     created_by integer not null,
+    name varchar(255) not null,
     total_amount numeric(10, 2) not null,
     description text,
     created_at timestamp default current_timestamp,

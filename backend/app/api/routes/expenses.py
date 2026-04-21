@@ -62,6 +62,7 @@ def _ensure_can_access_group(
 def _to_expense_read(expense: Expense) -> ExpenseRead:
     return ExpenseRead(
         id=int(getattr(expense, "id")),
+        name=str(getattr(expense, "name")),
         amount=float(getattr(expense, "total_amount")),
         description=getattr(expense, "description"),
         created_by=int(getattr(expense, "created_by")),
@@ -181,6 +182,7 @@ def create_expense(
     new_expense = Expense(
         group_id=group_id,
         created_by=int(getattr(current_user, "id")),
+        name=expense.name,
         total_amount=expense.amount,
         description=expense.description,
     )
@@ -325,6 +327,7 @@ def update_expense(
         )
 
     setattr(expense, "total_amount", expense_in.amount)
+    setattr(expense, "name", expense_in.name)
     setattr(expense, "description", expense_in.description)
     db.commit()
     db.refresh(expense)
