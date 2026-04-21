@@ -10,7 +10,7 @@ import JoinHousehold from "./Components/JoinHousehold";
 import AuthRedirect from "./Components/AuthRedirect";
 import HouseholdDashboard from "./Components/HouseholdDashboard";
 import ProtectedRoute from "./Components/ProtectedRoute";
-import HouseholdDetail from "./components/HouseholdDetail";
+import HouseholdDetail from "./Components/HouseholdDetail";
 import Expenses from "./Components/Expenses";
 import AddExpense from "./Components/AddExpense";
 
