@@ -108,8 +108,8 @@ const HouseholdDetail = () => {
             <div className="d-flex justify-content-between align-items-center mb-3">
               <h5 className="mb-0">Expenses</h5>
               <button className="btn btn-dark btn-sm" onClick={() => navigate(`/household/${groupId}/expenses`)}>
-                See More
-  </button>
+                See details
+              </button>
             </div>
 
             {expenses.length === 0 ? (
@@ -131,9 +131,9 @@ const HouseholdDetail = () => {
                     </small>
                   </div>
 
-                  <button className="btn btn-primary btn-sm w-auto">
-                    Open
-                  </button>
+                  <div className="fw-bold">
+                    ${Number(expense.amount).toFixed(2)}
+                  </div>
                 </div>
               ))
             )}
