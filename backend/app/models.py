@@ -122,7 +122,7 @@ class Expense(Base):
     id = Column(Integer, primary_key=True, index=True)
     group_id = Column(
         Integer,
-        ForeignKey("groups.id", ondelete="CASCADDE"),
+        ForeignKey("groups.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
