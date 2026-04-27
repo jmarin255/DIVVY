@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import PaymentModal from "./PaymentModal";
 
 const API_BASE = "http://127.0.0.1:8000/api/v1";
 
@@ -9,6 +10,7 @@ const Expenses = () => {
 
   const [expenses, setExpenses] = useState([]);
   const [balances, setBalances] = useState([]);
+  const [paymentDetails, setPaymentDetails] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -136,9 +138,12 @@ const Expenses = () => {
 
                       <button
                         className="btn btn-sm btn-outline-dark"
-                        onClick={() => {
-                          console.log("Settle up clicked for expense:", expense.id);
-                        }}
+                        onClick={() =>
+                          setPaymentDetails({
+                            expense,
+                            amount: displayAmount,
+                          })
+                        }
                       >
                         Settle Up
                       </button>
@@ -165,6 +170,13 @@ const Expenses = () => {
         )}
       </div>
 
+      {paymentDetails && (
+        <PaymentModal
+          expense={paymentDetails.expense}
+          amount={paymentDetails.amount}
+          onClose={() => setPaymentDetails(null)}
+        />
+      )}
     </div>
   );
 };
