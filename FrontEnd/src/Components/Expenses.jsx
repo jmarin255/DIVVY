@@ -9,46 +9,61 @@ const Expenses = () => {
   const navigate = useNavigate();
 
   const [expenses, setExpenses] = useState([]);
-  const [balances, setBalances] = useState([]);
+  const [expenseSplits, setExpenseSplits] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
   const [paymentDetails, setPaymentDetails] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
       const token = localStorage.getItem("access_token");
 
-      const [expRes, owedRes] = await Promise.all([
+      const [meRes, expRes, splitsRes] = await Promise.all([
+        fetch(`${API_BASE}/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
         fetch(`${API_BASE}/expenses/group/${groupId}`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        fetch(`${API_BASE}/me/owed-expenses`, {
+        fetch(`${API_BASE}/me/expense-splits`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);
 
+      const meData = await meRes.json();
       const expData = await expRes.json();
-      const owedData = await owedRes.json();
+      const splitData = await splitsRes.json();
 
+      if (meRes.ok) setCurrentUser(meData);
       if (expRes.ok) setExpenses(expData);
-      if (owedRes.ok) setBalances(owedData);
+      if (splitsRes.ok) setExpenseSplits(splitData);
     };
 
     fetchData();
   }, [groupId]);
 
-  // totals
-  const youAreOwed = balances.reduce(
-    (sum, b) => sum + (b.amount_owed_to_you || 0),
-    0
-  );
+  const splitByExpenseId = expenseSplits.reduce((map, split) => {
+    map.set(split.expense_id, Number(split.amount) || 0);
+    return map;
+  }, new Map());
 
-  const youOwe = balances.reduce(
-    (sum, b) => sum + (b.amount_you_owe || 0),
-    0
+  const youAreOwed = expenses.reduce((sum, expense) => {
+    if (!currentUser || expense.created_by !== currentUser.id) {
+      return sum;
+    }
+
+    const totalAmount = Number(expense.amount ?? expense.total_amount ?? 0);
+    const yourShare = splitByExpenseId.get(expense.id) || 0;
+
+    return sum + Math.max(totalAmount - yourShare, 0);
+  }, 0);
+
+  const youOwe = expenseSplits.reduce(
+    (sum, split) => sum + (Number(split.amount) || 0),
+    0,
   );
 
   return (
     <div className="container py-4">
-
       <h2 className="text-center fw-bold mb-4">Expenses</h2>
 
       {/* Summary */}
@@ -63,9 +78,7 @@ const Expenses = () => {
 
           <div>
             <small className="text-muted d-block">You owe</small>
-            <span className="fw-bold text-danger">
-              ${youOwe.toFixed(2)}
-            </span>
+            <span className="fw-bold text-danger">${youOwe.toFixed(2)}</span>
           </div>
         </div>
       </div>
@@ -77,38 +90,28 @@ const Expenses = () => {
 
           <button
             className="btn btn-dark btn-sm"
-            onClick={() =>
-              navigate(`/household/${groupId}/add-expense`)
-            }
+            onClick={() => navigate(`/household/${groupId}/add-expense`)}
           >
             +
           </button>
         </div>
 
         {expenses.length === 0 ? (
-          <div className="text-muted text-center py-3">
-            No expenses yet
-          </div>
+          <div className="text-muted text-center py-3">No expenses yet</div>
         ) : (
           expenses.slice(0, 5).map((expense) => {
-            const balance = balances.find(
-              (b) =>
-                b.expense_id === expense.id ||
-                b.expenseId === expense.id
+            const totalAmount = Number(
+              expense.amount ?? expense.total_amount ?? 0,
             );
-
-            const userOwes = balance?.amount_you_owe || 0;
-            const userIsOwed = balance?.amount_owed_to_you || 0;
-
-            const displayAmount = userOwes + userIsOwed;
+            const userShare = splitByExpenseId.get(expense.id) || 0;
+            const displayAmount =
+              currentUser && expense.created_by === currentUser.id
+                ? Math.max(totalAmount - userShare, 0)
+                : userShare;
 
             return (
-              <div
-                key={expense.id}
-                className="border rounded p-3 mb-3"
-              >
+              <div key={expense.id} className="border rounded p-3 mb-3">
                 <div className="d-flex justify-content-between align-items-start">
-
                   {/* LEFT */}
                   <div>
                     <div className="fw-bold">
@@ -135,7 +138,6 @@ const Expenses = () => {
                     </div>
 
                     <div className="d-flex gap-2 mt-2 justify-content-end">
-
                       <button
                         className="btn btn-sm btn-outline-dark"
                         onClick={() =>
@@ -151,18 +153,15 @@ const Expenses = () => {
                       <button
                         className="btn btn-sm btn-dark"
                         onClick={() =>
-                          navigate(
-                            `/household/${groupId}/add-expense`,
-                            { state: { expense } }
-                          )
+                          navigate(`/household/${groupId}/add-expense`, {
+                            state: { expense },
+                          })
                         }
                       >
                         Edit
                       </button>
-
                     </div>
                   </div>
-
                 </div>
               </div>
             );
