@@ -49,3 +49,61 @@
 .navbar {
   background-color: #7900f9;
 }
+
+.payment-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1050;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
+}
+
+.payment-modal {
+  width: 100%;
+  max-width: 480px;
+  border-radius: 22px;
+  padding: 1.5rem;
+  background: var(--bs-body-bg);
+  color: var(--bs-body-color);
+}
+
+.payment-summary {
+  background: var(--bs-tertiary-bg);
+  border: 1px solid var(--bs-border-color);
+}
+
+.payment-method-option {
+  width: 100%;
+  border: 1px solid var(--bs-border-color);
+  background: var(--bs-body-bg);
+  color: var(--bs-body-color);
+  border-radius: 14px;
+  padding: 0.85rem 1rem;
+  text-align: left;
+  font-weight: 600;
+}
+
+.payment-method-option:hover {
+  border-color: var(--bs-primary);
+}
+
+.payment-method-option.selected {
+  border-color: var(--bs-primary);
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
+}
+
+.payment-success-circle {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #198754;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  font-weight: bold;
+}

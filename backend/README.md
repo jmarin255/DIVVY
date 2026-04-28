@@ -1,6 +1,6 @@
-# Backend - Roommate Expense Splitter
+# Backend - Divvy
 
-A FastAPI-based backend for the Roommate Expense Splitter application that manages users, groups, and expense splitting logic.
+A FastAPI-based backend for the Divvy application that manages users, groups, and expense splitting logic.
 
 ## Tech Stack
 
@@ -100,7 +100,7 @@ pip install -r requirements.txt
 ```
 DATABASE_URL=postgresql://user:password@localhost/roommate_expense_splitter
 SECRET_KEY=your-secret-key-here
-PROJECT_NAME=Roommate Expense Splitter
+PROJECT_NAME=Divvy
 API_V1_STR=/api/v1
 ```
 

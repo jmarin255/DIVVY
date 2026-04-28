@@ -10,6 +10,9 @@ import JoinHousehold from "./Components/JoinHousehold";
 import AuthRedirect from "./Components/AuthRedirect";
 import HouseholdDashboard from "./Components/HouseholdDashboard";
 import ProtectedRoute from "./Components/ProtectedRoute";
+import HouseholdDetail from "./Components/HouseholdDetail";
+import Expenses from "./Components/Expenses";
+import AddExpense from "./Components/AddExpense";
 
 function App() {
   const location = useLocation();
@@ -43,7 +46,7 @@ function App() {
 
       try {
         const response = await fetch(
-          "http://127.0.0.1:8000/api/v1/groups/",
+          "http://127.0.0.1:8000/api/v1/me/groups/",
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("access_token")}`,
@@ -84,11 +87,11 @@ function App() {
   // Back button logic
   const backPath = hasGroups ? "/dashboard" : "/household";
 
-  const showBackButton = [
-    "/create-household",
-    "/join-household",
-    "/household",
-  ].includes(location.pathname);
+  const showBackButton =
+    location.pathname === "/create-household" ||
+    location.pathname === "/join-household" ||
+    location.pathname === "/household" ||
+    location.pathname.startsWith("/household/");
 
   // Prevent flicker / bad redirects
   if (loadingUser) {
@@ -223,7 +226,35 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        <Route
+          path="/household/:groupId"
+          element={
+            <ProtectedRoute user={user}>
+              <HouseholdDetail />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/household/:groupId/expenses"
+          element={
+            <ProtectedRoute user={user}>
+              <Expenses />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/household/:groupId/add-expense"
+          element={
+            <ProtectedRoute user={user}>
+              <AddExpense />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
+
     </>
   );
 }

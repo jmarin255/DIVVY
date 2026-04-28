@@ -1,8 +1,6 @@
-# Roommate Expense Splitter
+# Divvy
 
-Software Engineering II project.
-
-Roommate Expense Splitter is a full-stack web application for managing shared household expenses, roommate groups, and authentication.
+Divvy is a full-stack web application for managing shared household expenses, groups, and authentication.
 
 ## Tech Stack
 
@@ -10,180 +8,144 @@ Roommate Expense Splitter is a full-stack web application for managing shared ho
 - Backend: FastAPI + Uvicorn + SQLAlchemy
 - Database: PostgreSQL
 - Auth: JWT + Argon2 password hashing
+- Runtime: Docker Compose
 
 ## Repository Structure
 
 ```text
-Roommate-Expense-Splitter/
-├── FrontEnd/              # React frontend
-├── backend/               # FastAPI backend
-├── .env.example           # Example environment variables
-├── .env                   # Your local environment variables
+DIVVY/
+├── FrontEnd/               # React frontend
+├── backend/                # FastAPI backend
+├── docker-compose.yml      # Multi-service Docker setup
+├── .env.example            # Environment variable template
+├── scripts/
+│   ├── start.sh            # Smart startup script (Linux/macOS)
+│   └── start.ps1           # Smart startup script (Windows PowerShell)
 └── README.md
 ```
 
 ## Prerequisites
 
-- Python 3.10+
-- Node.js 18+ and npm
-- PostgreSQL 12+ server if you host DB locally
-- PostgreSQL client (`psql`) only if you need to run SQL scripts manually (optional for remote pre-initialized DBs)
+- Docker
+- Docker Compose (Docker CLI plugin)
 
-## 0. Install Prerequisites
+No local Python, Node, or PostgreSQL installation is required for normal development.
 
-Install Python, Node.js, npm, and PostgreSQL using your OS package manager.
+## Quick Start
 
-If you use a remote database that is already initialized, you can skip installing PostgreSQL locally and skip `psql`.
-
-Ubuntu/Debian:
-
-```bash
-sudo apt update
-sudo apt install -y python3 python3-venv python3-pip nodejs npm postgresql postgresql-contrib
-```
-
-macOS (Homebrew):
-
-```bash
-brew update
-brew install python node postgresql@16
-brew services start postgresql@16
-```
-
-Windows (winget, PowerShell):
-
-```powershell
-winget install Python.Python.3.12
-winget install OpenJS.NodeJS.LTS.17
-winget install PostgreSQL.PostgreSQL
-```
-
-After installation, verify versions:
-
-```bash
-python3 --version
-node --version
-npm --version
-psql --version
-```
-
-If `psql` is not installed, that is fine when using a remote DB that is already initialized.
-
-## 1. Install Backend Dependencies
-
-From the repository root:
-
-```bash
-cd backend
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-```
-
-Windows (PowerShell):
-
-```powershell
-cd backend
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-```
-
-## 2. Install Frontend Dependencies
-
-From the repository root:
-
-```bash
-cd FrontEnd
-npm install
-```
-
-## 3. Configure Environment Variables
-
-From the repository root, copy the example file and update values for your machine:
+1. Create your environment file:
 
 ```bash
 cp .env.example .env
 ```
 
-Note: backend settings load from `../.env`, so keep `.env` at the repository root.
+2. Update `.env` with your values:
 
-## 4. Initialize PostgreSQL Database
+- Set a secure `SECRET_KEY`
+- Set `FRONTEND_HOST=http://localhost:5173`
+- For remote database (Neon or other): set `DATABASE_URL` to that remote connection string
+- For local Docker PostgreSQL: remove `DATABASE_URL` or leave it empty
 
-Only do this step if your PostgreSQL database is uninitialized (fresh setup).
+3. Start the app:
 
-If you are using a remote DB that is already initialized, skip this section.
-
-Create the database and run schema scripts:
-
-Example:
-
-```bash
-createdb roommate_expense_splitter
-psql -U postgres -d roommate_expense_splitter -f backend/sql_scripts/create_tables.sql
-```
-
-Optional seed data:
+Linux/macOS:
 
 ```bash
-psql -U postgres -d roommate_expense_splitter -f backend/sql_scripts/seed_test_data.sql
+./scripts/start.sh
 ```
 
-## 5. Run the Project (Backend + Frontend Together)
-
-Use two terminals.
-
-Terminal 1 (backend):
-
-```bash
-cd backend
-source .venv/bin/activate
-./scripts/run-dev.sh
-```
-
-If the script is not executable:
-
-```bash
-bash scripts/run-dev.sh
-```
-
-Or on Windows (PowerShell):
+Windows PowerShell:
 
 ```powershell
-cd backend
-.\.venv\Scripts\Activate.ps1
-.\scripts\run-dev.ps1
+./scripts/start.ps1
 ```
 
-Terminal 2 (frontend):
+The smart start script does this automatically:
+
+- If `DATABASE_URL` points to a remote DB, it starts `frontend` and `backend`
+- If no remote DB is detected, it starts `frontend`, `backend`, and local PostgreSQL (`local-db` profile)
+
+## Manual Docker Commands
+
+Use these if you prefer direct compose commands.
+
+Start with remote DB:
 
 ```bash
-cd FrontEnd
-npm run dev
+docker compose up
+```
+
+Start with local PostgreSQL container:
+
+```bash
+docker compose --profile local-db up
+```
+
+Start detached:
+
+```bash
+docker compose up -d
+# or
+docker compose --profile local-db up -d
+```
+
+Stop services:
+
+```bash
+docker compose down
+# or
+docker compose --profile local-db down
+```
+
+Rebuild images:
+
+```bash
+docker compose up --build
+# or
+docker compose --profile local-db up --build
+```
+
+View logs:
+
+```bash
+docker compose logs -f
+docker compose logs -f backend
+docker compose logs -f frontend
+docker compose logs -f db
 ```
 
 ## Local URLs
 
 - Frontend: http://localhost:5173
 - Backend API: http://localhost:8000
-- Swagger Docs: http://localhost:8000/docs
+- Swagger UI: http://localhost:8000/docs
 - ReDoc: http://localhost:8000/redoc
 
-## Running Tests (Backend)
+## Running Tests
+
+Backend tests from the running backend container:
 
 ```bash
-cd backend
-source .venv/bin/activate
-pytest
+docker compose exec backend pytest
 ```
 
-## Common Issues
+If you started with the local DB profile, the same command works:
 
-- Backend fails to load environment variables:
-  - Confirm `.env` is in the repository root, not in `backend/`.
+```bash
+docker compose --profile local-db exec backend pytest
+```
+
+## Troubleshooting
+
+- Missing `.env`:
+  - `scripts/start.sh` and `scripts/start.ps1` will copy `.env.example` and stop so you can edit values.
+- Backend cannot connect to local DB:
+  - Start using `./scripts/start.sh` or `docker compose --profile local-db up`
+  - Ensure `DATABASE_URL` is empty or removed in `.env`
 - Frontend cannot reach backend:
-  - Ensure backend is running on port 8000.
-  - Ensure `FRONTEND_HOST` in `.env` matches the frontend URL.
-- Database connection errors:
-  - Verify PostgreSQL is running.
-  - Verify `DATABASE_URL` credentials, host, port, and database name.
+  - Confirm backend is running on port `8000`
+  - Confirm `FRONTEND_HOST` in `.env` is `http://localhost:5173`
+
+## Notes
+
+For additional Docker details, see `DOCKER_README.md`.
